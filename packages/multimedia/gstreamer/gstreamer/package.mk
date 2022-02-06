@@ -7,7 +7,7 @@ PKG_SHA256="607daf64bbbd5fb18af9d17e21c0d22c4d702fffe83b23cb22d1b1af2ca23a2a"
 PKG_LICENSE="GPL-2.1-or-later"
 PKG_SITE="https://gstreamer.freedesktop.org"
 PKG_URL="https://gstreamer.freedesktop.org/src/gstreamer/${PKG_NAME}-${PKG_VERSION}.tar.xz"
-PKG_DEPENDS_TARGET="toolchain"
+PKG_DEPENDS_TARGET="toolchain ffmpeg libvorbis-system flac-system"
 PKG_LONGDESC="GStreamer open-source multimedia framework core library"
 
 pre_configure_target() {
