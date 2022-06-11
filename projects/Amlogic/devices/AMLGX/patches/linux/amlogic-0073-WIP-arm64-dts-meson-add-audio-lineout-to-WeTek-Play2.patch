@@ -1,0 +1,56 @@
+From 47752ca0f359793efa7c7e7823cc9b506a24d991 Mon Sep 17 00:00:00 2001
+From: Christian Hewitt <christianshewitt@gmail.com>
+Date: Tue, 26 Jul 2022 19:26:35 +0000
+Subject: [PATCH 73/73] WIP: arm64: dts: meson: add audio lineout to WeTek
+ Play2
+
+Add support for the ES7134LV DAC headphone output on the WeTek Play2.
+
+Signed-off-by: Christian Hewitt <christianshewitt@gmail.com>
+---
+ .../boot/dts/amlogic/meson-gxbb-wetek-play2.dts   | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/amlogic/meson-gxbb-wetek-play2.dts b/arch/arm64/boot/dts/amlogic/meson-gxbb-wetek-play2.dts
+index 6eae692792ec..5b9068fcb8fe 100644
+--- a/arch/arm64/boot/dts/amlogic/meson-gxbb-wetek-play2.dts
++++ b/arch/arm64/boot/dts/amlogic/meson-gxbb-wetek-play2.dts
+@@ -21,6 +21,14 @@
+ 		sound-name-prefix = "DIT";
+ 	};
+ 
++	lineout: audio-codec-1 {
++		#sound-dai-cells = <0>;
++		compatible = "everest,es7134";
++		VDD-supply = <&vcc_3v3>;
++		status = "okay";
++		sound-name-prefix = "Lineout";
++	};
++
+ 	leds {
+ 		led-wifi {
+ 			label = "wetek-play:wifi-status";
+@@ -51,6 +59,9 @@
+ 	sound {
+ 		compatible = "amlogic,gx-sound-card";
+ 		model = "WETEK-PLAY2";
++		audio-widgets = "Line", "Lineout";
++		audio-routing = "Lineout", "Lineout AOUTL",
++				"Lineout", "Lineout AOUTR";
+ 		assigned-clocks = <&clkc CLKID_MPLL0>,
+ 				  <&clkc CLKID_MPLL1>,
+ 				  <&clkc CLKID_MPLL2>;
+@@ -76,6 +87,10 @@
+ 			codec-0 {
+ 				sound-dai = <&aiu AIU_HDMI CTRL_I2S>;
+ 			};
++
++			codec-1 {
++				sound-dai = <&lineout>;
++			};
+ 		};
+ 
+ 		dai-link-3 {
+-- 
+2.17.1
+
