@@ -169,7 +169,7 @@ case "${DISTRO}" in
         [mkfontdir]=xorg-mkfontdir
         [bdftopcf]=xorg-bdftopcf
         [xsltproc]=libxslt
-        [java]="java-runtime-common jdk8-openjdk"
+        [java]=jdk-openjdk
         [python3]=python3
         [rpcgen]=rpcsvc-proto
         [xa]=xa
