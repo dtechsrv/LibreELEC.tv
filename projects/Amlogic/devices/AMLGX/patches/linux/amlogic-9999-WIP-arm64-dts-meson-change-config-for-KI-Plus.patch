@@ -1,0 +1,431 @@
+diff --git a/arch/arm64/boot/dts/amlogic/meson-gxbb-mecool-ki-plus.dts b/arch/arm64/boot/dts/amlogic/meson-gxbb-mecool-ki-plus.dts
+index cb42263..f6eba21 100644
+--- a/arch/arm64/boot/dts/amlogic/meson-gxbb-mecool-ki-plus.dts
++++ b/arch/arm64/boot/dts/amlogic/meson-gxbb-mecool-ki-plus.dts
+@@ -1,34 +1,107 @@
+ // SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+-
+ /*
+  * Author: Christian Hewitt <christianshewitt@gmail.com>
++ * Author: Gabor Dee <dee.gabor@gmail.com>
+  */
+ 
+-#include "meson-gxbb-p201.dts"
++/dts-v1/;
++
++#include "meson-gxbb-mecool.dtsi"
++#include <dt-bindings/input/input.h>
++#include <dt-bindings/sound/meson-aiu.h>
+ 
+ / {
+ 	compatible = "videostrong,gxbb-ki-plus", "amlogic,meson-gxbb";
+-	model = "MeCool KI Plus";
+-
+-	clock: meson_clock {
+-		compatible = "amlogic, gxbb-clock";
+-		reg = <0x0 0xc883c000 0x0 0x1000>,
+-		      <0x0 0xc8100000 0x0 0x1000>;
+-		#clock-cells = <1>;
+-		#reset-cells = <1>;
+-		sys_max = <1536000000>;
++	model = "Videostrong KI Plus";
++
++	spdif_dit: audio-codec-0 {
++		#sound-dai-cells = <0>;
++		compatible = "linux,spdif-dit";
++		status = "okay";
++		sound-name-prefix = "DIT";
++	};
++
++	i2s_codec: audio-codec-1 {
++		#sound-dai-cells = <0>;
++		compatible = "everest,es7134";
++		VDD-supply = <&vcc_5v>;
++		status = "okay";
+ 	};
+ 
+-	memory@0 {
+-		device_type = "memory";
+-		reg = <0x0 0x0 0x0 0x40000000>;
++	gpio-keys-polled {
++		compatible = "gpio-keys-polled";
++		#address-cells = <1>;
++		#size-cells = <0>;
++		poll-interval = <100>;
++
++		button@0 {
++			label = "power";
++			linux,code = <KEY_POWER>;
++			gpios = <&gpio_ao GPIOAO_3 GPIO_ACTIVE_LOW>;
++		};
++	};
++
++	sound {
++		compatible = "amlogic,gx-sound-card";
++		model = "KI-PLUS";
++		assigned-clocks = <&clkc CLKID_MPLL0>,
++				  <&clkc CLKID_MPLL1>,
++				  <&clkc CLKID_MPLL2>;
++		assigned-clock-parents = <0>, <0>, <0>;
++		assigned-clock-rates = <294912000>,
++				       <270950400>,
++				       <393216000>;
++		status = "okay";
++
++		dai-link-0 {
++			sound-dai = <&aiu AIU_CPU CPU_I2S_FIFO>;
++		};
++
++		dai-link-1 {
++			sound-dai = <&aiu AIU_CPU CPU_SPDIF_FIFO>;
++		};
++
++		dai-link-2 {
++			sound-dai = <&aiu AIU_CPU CPU_I2S_ENCODER>;
++			dai-format = "i2s";
++			mclk-fs = <256>;
++
++			codec-0 {
++				sound-dai = <&aiu AIU_HDMI CTRL_I2S>;
++			};
++
++			codec-1 {
++				sound-dai = <&i2s_codec>;
++			};
++
++		};
++
++		dai-link-3 {
++			sound-dai = <&aiu AIU_CPU CPU_SPDIF_ENCODER>;
++
++			codec-0 {
++				sound-dai = <&spdif_dit>;
++			};
++		};
++
++		dai-link-4 {
++			sound-dai = <&aiu AIU_HDMI CTRL_OUT>;
++
++			codec-0 {
++				sound-dai = <&hdmi_tx>;
++			};
++		};
+ 	};
+ };
+ 
+-&ir {
+-	linux,rc-map-name = "rc-mecool-ki-plus";
++&aiu {
++	status = "okay";
++	pinctrl-0 = <&i2s_am_clk_pins>, <&i2s_out_ao_clk_pins>,
++		    <&i2s_out_lr_clk_pins>, <&i2s_out_ch01_ao_pins>,
++		    <&spdif_out_y_pins>;
++	pinctrl-names = "default";
+ };
+ 
+-&usb_pwr {
+-	gpio = <>;
++&ir {
++	linux,rc-map-name = "rc-videostrong-kii-pro";
+ };
+diff --git a/arch/arm64/boot/dts/amlogic/meson-gxbb-mecool.dtsi b/arch/arm64/boot/dts/amlogic/meson-gxbb-mecool.dtsi
+new file mode 100644
+index 0000000..292f075
+--- /dev/null
++++ b/arch/arm64/boot/dts/amlogic/meson-gxbb-mecool.dtsi
+@@ -0,0 +1,295 @@
++// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
++/*
++ * Author: Dee Gabor <dee.gabor@gmail.com>
++ */
++
++#include "meson-gxbb.dtsi"
++#include <dt-bindings/gpio/gpio.h>
++#include <dt-bindings/leds/common.h>
++
++/ {
++	aliases {
++		serial0 = &uart_AO;
++		ethernet0 = &ethmac;
++	};
++
++	chosen {
++		stdout-path = "serial0:115200n8";
++	};
++
++	memory@0 {
++		device_type = "memory";
++		reg = <0x0 0x0 0x0 0x40000000>;
++	};
++
++	leds {
++		compatible = "gpio-leds";
++
++		led-power {
++			/* red in suspend or power-off */
++			color = <LED_COLOR_ID_BLUE>;
++			function = LED_FUNCTION_POWER;
++			gpios = <&gpio_ao GPIOAO_13 GPIO_ACTIVE_HIGH>;
++			default-state = "on";
++			panic-indicator;
++		};
++	};
++
++	usb_pwr: regulator-usb-pwrs {
++		compatible = "regulator-fixed";
++
++		regulator-name = "USB_PWR";
++
++		regulator-min-microvolt = <5000000>;
++		regulator-max-microvolt = <5000000>;
++
++		/* signal name in schematic: USB_PWR_EN */
++		gpio = <&gpio GPIODV_24 GPIO_ACTIVE_HIGH>;
++		enable-active-high;
++	};
++
++	vddio_card: gpio-regulator {
++		compatible = "regulator-gpio";
++
++		regulator-name = "VDDIO_CARD";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <3300000>;
++
++		gpios = <&gpio_ao GPIOAO_5 GPIO_ACTIVE_HIGH>;
++		gpios-states = <1>;
++
++		/* Based on P200 schematics, signal CARD_1.8V/3.3V_CTR */
++		states = <1800000 0>,
++			 <3300000 1>;
++
++		regulator-settling-time-up-us = <10000>;
++		regulator-settling-time-down-us = <150000>;
++	};
++
++	vddio_boot: regulator-vddio_boot {
++		compatible = "regulator-fixed";
++		regulator-name = "VDDIO_BOOT";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <1800000>;
++	};
++
++	vddao_3v3: regulator-vddao_3v3 {
++		compatible = "regulator-fixed";
++		regulator-name = "VDDAO_3V3";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++	};
++
++	vddio_ao18: regulator-vddio_ao18 {
++		compatible = "regulator-fixed";
++		regulator-name = "VDDIO_AO18";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <1800000>;
++		regulator-always-on;
++	};
++
++	vcc_3v3: regulator-vcc_3v3 {
++		compatible = "regulator-fixed";
++		regulator-name = "VCC_3V3";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++	};
++
++	vcc_5v: regulator-vcc-5v {
++		compatible = "regulator-fixed";
++		regulator-name = "VCC_5V";
++		regulator-min-microvolt = <5000000>;
++		regulator-max-microvolt = <5000000>;
++	};
++
++	emmc_pwrseq: emmc-pwrseq {
++		compatible = "mmc-pwrseq-emmc";
++		reset-gpios = <&gpio BOOT_9 GPIO_ACTIVE_LOW>;
++	};
++
++	wifi32k: wifi32k {
++		compatible = "pwm-clock";
++		#clock-cells = <0>;
++		clock-frequency = <32768>;
++		pwms = <&pwm_ef 0 30518 0>; /* PWM_E at 32.768KHz */
++	};
++
++	sdio_pwrseq: sdio-pwrseq {
++		compatible = "mmc-pwrseq-simple";
++		reset-gpios = <&gpio GPIOX_6 GPIO_ACTIVE_LOW>;
++		clocks = <&wifi32k>;
++		clock-names = "ext_clock";
++	};
++
++	cvbs_connector: cvbs-connector {
++		compatible = "composite-video-connector";
++
++		port {
++			cvbs_connector_in: endpoint {
++				remote-endpoint = <&cvbs_vdac_out>;
++			};
++		};
++	};
++
++	hdmi-connector {
++		compatible = "hdmi-connector";
++		type = "a";
++
++		port {
++			hdmi_connector_in: endpoint {
++				remote-endpoint = <&hdmi_tx_tmds_out>;
++			};
++		};
++	};
++};
++
++&cec_AO {
++	status = "okay";
++	pinctrl-0 = <&ao_cec_pins>;
++	pinctrl-names = "default";
++	hdmi-phandle = <&hdmi_tx>;
++};
++
++&cvbs_vdac_port {
++	cvbs_vdac_out: endpoint {
++		remote-endpoint = <&cvbs_connector_in>;
++	};
++};
++
++&ethmac {
++	status = "okay";
++	pinctrl-0 = <&eth_rmii_pins>;
++	pinctrl-names = "default";
++	phy-mode = "rmii";
++
++	snps,reset-gpio = <&gpio GPIOZ_14 0>;
++	snps,reset-delays-us = <0>, <10000>, <1000000>;
++	snps,reset-active-low;
++};
++
++&hdmi_tx {
++	status = "okay";
++	pinctrl-0 = <&hdmi_hpd_pins>, <&hdmi_i2c_pins>;
++	pinctrl-names = "default";
++	hdmi-supply = <&vddio_ao18>;
++};
++
++&hdmi_tx_tmds_port {
++	hdmi_tx_tmds_out: endpoint {
++		remote-endpoint = <&hdmi_connector_in>;
++	};
++};
++
++&ir {
++	status = "okay";
++	pinctrl-0 = <&remote_input_ao_pins>;
++	pinctrl-names = "default";
++};
++
++&pwm_ef {
++	status = "okay";
++	pinctrl-0 = <&pwm_e_pins>;
++	pinctrl-names = "default";
++	clocks = <&clkc CLKID_FCLK_DIV4>;
++	clock-names = "clkin0";
++};
++
++&saradc {
++	status = "okay";
++	vref-supply = <&vddio_ao18>;
++};
++
++/* Wireless SDIO Module */
++&sd_emmc_a {
++	status = "okay";
++	pinctrl-0 = <&sdio_pins>;
++	pinctrl-1 = <&sdio_clk_gate_pins>;
++	pinctrl-names = "default", "clk-gate";
++	#address-cells = <1>;
++	#size-cells = <0>;
++
++	bus-width = <4>;
++	cap-sd-highspeed;
++	max-frequency = <50000000>;
++
++	non-removable;
++	disable-wp;
++
++	/* WiFi firmware requires power to be kept while in suspend */
++	keep-power-in-suspend;
++
++	mmc-pwrseq = <&sdio_pwrseq>;
++
++	vmmc-supply = <&vddao_3v3>;
++	vqmmc-supply = <&vddio_boot>;
++
++	brcmf: wifi@1 {
++		reg = <1>;
++		compatible = "brcm,bcm4329-fmac";
++	};
++};
++
++/* SD card */
++&sd_emmc_b {
++	status = "okay";
++	pinctrl-0 = <&sdcard_pins>;
++	pinctrl-1 = <&sdcard_clk_gate_pins>;
++	pinctrl-names = "default", "clk-gate";
++
++	bus-width = <4>;
++	cap-sd-highspeed;
++	sd-uhs-sdr12;
++	sd-uhs-sdr25;
++	sd-uhs-sdr50;
++	max-frequency = <100000000>;
++	disable-wp;
++
++	cd-gpios = <&gpio CARD_6 GPIO_ACTIVE_LOW>;
++
++	vmmc-supply = <&vddao_3v3>;
++	vqmmc-supply = <&vddio_card>;
++};
++
++/* eMMC */
++&sd_emmc_c {
++	status = "okay";
++	pinctrl-0 = <&emmc_pins>, <&emmc_ds_pins>;
++	pinctrl-1 = <&emmc_clk_gate_pins>;
++	pinctrl-names = "default", "clk-gate";
++
++	bus-width = <8>;
++	cap-mmc-highspeed;
++	max-frequency = <200000000>;
++	non-removable;
++	disable-wp;
++	mmc-ddr-1_8v;
++	mmc-hs200-1_8v;
++
++	mmc-pwrseq = <&emmc_pwrseq>;
++	vmmc-supply = <&vcc_3v3>;
++	vqmmc-supply = <&vddio_boot>;
++};
++
++/* This UART is brought out to the DB9 connector */
++&uart_AO {
++	status = "okay";
++	pinctrl-0 = <&uart_ao_a_pins>;
++	pinctrl-names = "default";
++};
++
++&usb0_phy {
++	status = "okay";
++	phy-supply = <&usb_pwr>;
++};
++
++&usb1_phy {
++	status = "okay";
++};
++
++&usb0 {
++	status = "okay";
++};
++
++&usb1 {
++	status = "okay";
++};
