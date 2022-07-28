@@ -3,8 +3,8 @@
 # Copyright (C) 2018-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="pvr.dvbviewer"
-PKG_VERSION="7.3.3-Matrix"
-PKG_SHA256="d29108aca5bb22ede1613b9055cd5a8e684861b0086de96523c23e5d21de6143"
+PKG_VERSION="20.2.0-Nexus"
+PKG_SHA256="f360cab6ae842ff428d76f44ae3ca374c3101871d2fa6a139e9d1d14e42a4372"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"

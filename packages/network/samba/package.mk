@@ -3,12 +3,12 @@
 # Copyright (C) 2017-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="samba"
-PKG_VERSION="4.13.9"
-PKG_SHA256="b97a773ed3b4dae6d5ebd3e09337c897ae898b65f38abad550f852b594d4e07f"
+PKG_VERSION="4.16.3"
+PKG_SHA256="7a6565d7c0a98eac7a5a283fa94d9266dd39ea62f262ccdc5a634a580d549c58"
 PKG_LICENSE="GPLv3+"
 PKG_SITE="https://www.samba.org"
 PKG_URL="https://download.samba.org/pub/samba/stable/${PKG_NAME}-${PKG_VERSION}.tar.gz"
-PKG_DEPENDS_TARGET="toolchain attr heimdal:host e2fsprogs Python3 zlib readline popt libaio connman gnutls"
+PKG_DEPENDS_TARGET="toolchain attr heimdal:host e2fsprogs Python3 libunwind zlib readline popt libaio connman gnutls wsdd2"
 PKG_NEED_UNPACK="$(get_pkg_directory heimdal) $(get_pkg_directory e2fsprogs)"
 PKG_LONGDESC="A free SMB / CIFS fileserver and client."
 PKG_BUILD_FLAGS="-gold"
@@ -61,7 +61,6 @@ configure_package() {
                       --without-ad-dc \
                       --without-automount \
                       --without-cluster-support \
-                      --without-dnsupdate \
                       --without-fam \
                       --without-gettext \
                       --without-gpgme \
@@ -123,12 +122,12 @@ pre_make_target() {
 }
 
 make_target() {
-  ./buildtools/bin/waf build ${PKG_WAF_VERBOSE} --targets=${PKG_SAMBA_TARGET} -j${CONCURRENCY_MAKE_LEVEL}
+  make ${PKG_SAMBA_TARGET} -j${CONCURRENCY_MAKE_LEVEL}
 }
 
 makeinstall_target() {
-  ./buildtools/bin/waf install ${PKG_WAF_VERBOSE} --destdir=${SYSROOT_PREFIX} --targets=smbclient -j${CONCURRENCY_MAKE_LEVEL}
-  ./buildtools/bin/waf install ${PKG_WAF_VERBOSE} --destdir=${INSTALL} --targets=${PKG_SAMBA_TARGET} -j${CONCURRENCY_MAKE_LEVEL}
+  PYTHONHASHSEED=1 WAF_MAKE=1 ./buildtools/bin/waf install ${PKG_WAF_VERBOSE} --destdir=${SYSROOT_PREFIX} --targets=smbclient -j${CONCURRENCY_MAKE_LEVEL}
+  PYTHONHASHSEED=1 WAF_MAKE=1 ./buildtools/bin/waf install ${PKG_WAF_VERBOSE} --destdir=${INSTALL} --targets=${PKG_SAMBA_TARGET} -j${CONCURRENCY_MAKE_LEVEL}
 }
 
 copy_directory_of_links() {
