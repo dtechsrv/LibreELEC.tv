@@ -1,0 +1,27 @@
+From db90e07847de535d60a027abe1fa05afb56d3793 Mon Sep 17 00:00:00 2001
+From: Gabor Dee <dee.gabor@gmail.com>
+Date: Sun, 4 Jan 2026 12:59:27 +0100
+Subject: [PATCH] arm64: dts: meson: p230: fix IRQ for external PHY
+
+IRQ #29 was used by the GXBB, but this is not appropriate for the GXL.
+The S905D is the only SoC in the GXL family that is RGMII-capable,
+and the MDIO layout is inherited from the S912 (GXM).
+
+Signed-off-by: Gabor Dee <dee.gabor@gmail.com>
+---
+ arch/arm64/boot/dts/amlogic/meson-gxl-s905d-p230.dts | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm64/boot/dts/amlogic/meson-gxl-s905d-p230.dts b/arch/arm64/boot/dts/amlogic/meson-gxl-s905d-p230.dts
+index 7dffeb5..8606f7f 100644
+--- a/arch/arm64/boot/dts/amlogic/meson-gxl-s905d-p230.dts
++++ b/arch/arm64/boot/dts/amlogic/meson-gxl-s905d-p230.dts
+@@ -84,7 +84,7 @@
+ 		reset-gpios = <&gpio GPIOZ_14 GPIO_ACTIVE_LOW>;
+ 
+ 		interrupt-parent = <&gpio_intc>;
+-		interrupts = <29 IRQ_TYPE_LEVEL_LOW>;
++		interrupts = <25 IRQ_TYPE_LEVEL_LOW>;
+ 		eee-broken-1000t;
+ 	};
+ };
